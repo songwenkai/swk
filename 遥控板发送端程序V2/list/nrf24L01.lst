@@ -1,4 +1,4 @@
-C51 COMPILER V9.00   NRF24L01                                                              09/29/2016 21:35:09 PAGE 1   
+C51 COMPILER V9.00   NRF24L01                                                              10/03/2016 14:28:43 PAGE 1   
 
 
 C51 COMPILER V9.00, COMPILATION OF MODULE NRF24L01
@@ -62,7 +62,7 @@ line level    source
   51   1      }
   52          uchar SPI_Read (uchar  reg )
   53          {
-C51 COMPILER V9.00   NRF24L01                                                              09/29/2016 21:35:09 PAGE 2   
+C51 COMPILER V9.00   NRF24L01                                                              10/03/2016 14:28:43 PAGE 2   
 
   54   1        uchar reg_val;
   55   1        CSN=0;
@@ -126,7 +126,7 @@ line level    source
  112   1      }
  113          /****************************************************************************************************/
  114          /*******************************接*****收*****模*****式*****代*****码********************************/
-C51 COMPILER V9.00   NRF24L01                                                              09/29/2016 21:35:09 PAGE 3   
+C51 COMPILER V9.00   NRF24L01                                                              10/03/2016 14:28:43 PAGE 3   
 
  115          /****************************************************************************************************/
  116          uchar SPI_Read_Buf(uchar reg, uchar *pBuf, uchar uchars)
@@ -180,7 +180,7 @@ line level    source
  164   1      }
  165          /****************************************************************************************************/
  166          /*函数：void RX_Mode(void)
- 167          /*功能：数据接收配置 
+ 167          /*功能：数据接收配置 11
  168          /****************************************************************************************************/
  169          void RX_Mode(void)
  170          {
@@ -190,7 +190,7 @@ line level    source
  174   1        SPI_Write_Buf(WRITE_REG + RX_ADDR_P0, TX_ADDRESS, TX_ADR_WIDTH); // RX_Addr0 same as TX_Adr for Auto.Ack
  175   1         
  176   1        SPI_RW_Reg(WRITE_REG + EN_AA, 0x01);      // Enable Auto.Ack:Pipe0
-C51 COMPILER V9.00   NRF24L01                                                              09/29/2016 21:35:09 PAGE 4   
+C51 COMPILER V9.00   NRF24L01                                                              10/03/2016 14:28:43 PAGE 4   
 
  177   1        SPI_RW_Reg(WRITE_REG + EN_RXADDR, 0x01);  // Enable Pipe0
  178   1         //SPI_RW_Reg(WRITE_REG + SETUP_RETR, 0x1a); // 500us + 86us, 10 retrans...1a
