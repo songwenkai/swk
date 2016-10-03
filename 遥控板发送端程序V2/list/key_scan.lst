@@ -1,0 +1,82 @@
+C51 COMPILER V9.00   KEY_SCAN                                                              07/02/2016 23:54:11 PAGE 1   
+
+
+C51 COMPILER V9.00, COMPILATION OF MODULE KEY_SCAN
+OBJECT MODULE PLACED IN .\obj\key_scan.obj
+COMPILER INVOKED BY: C:\Keil_v5\C51\BIN\C51.EXE src\key_scan.c LARGE BROWSE ORDER INCDIR(.\inc) DEBUG OBJECTEXTEND PRINT
+                    -(.\list\key_scan.lst) TABS(2) OBJECT(.\obj\key_scan.obj)
+
+line level    source
+
+   1          #include "key_scan.h"
+   2          #include "io_cfg.h"
+   3          #include "type.h"
+   4          #include "delay.h"
+   5          
+   6          #define KEY_DELAY 100
+   7          /******************************************************************
+   8           - 功能描述：读取按键值并保存在key_value中
+   9           - 隶属模块：公开函数模块
+  10           - 函数属性：外部，用户可调用
+  11           - 参数说明：无          
+  12           - 返回说明：返回按键值key_value
+  13           ******************************************************************/
+  14          u8 key_scan_left(void)
+  15          {
+  16   1        unsigned char key_value=0;
+  17   1        if(key1==0 || key2==0||key3==0 || key4==0)
+  18   1        {
+  19   2          delay_ms(20);
+  20   2          if(key1==0)
+  21   2            key_value = 1;
+  22   2          if(key2==0)
+  23   2            key_value = 2;
+  24   2          if(key3==0)
+  25   2            key_value = 3;
+  26   2          if(key4==0)
+  27   2            key_value = 4;
+  28   2      
+  29   2          //while(key1==0 || key2==0||key3==0 || key4==0||K1==0||K2==0||K3==0||K4==0);  
+  30   2        }
+  31   1        return key_value;
+  32   1      }  
+  33           /******************************************************************
+  34           - 功能描述：读取按键值并保存在key_value中
+  35           - 隶属模块：公开函数模块
+  36           - 函数属性：外部，用户可调用
+  37           - 参数说明：无          
+  38           - 返回说明：返回按键值key_value
+  39           ******************************************************************/
+  40          u8 key_scan_right(void)
+  41          {
+  42   1        unsigned char key_value=0;
+  43   1        if(K1==0||K2==0||K3==0||K4==0)
+  44   1        {
+  45   2          delay_ms(20);
+  46   2          if(K1==0)
+  47   2            key_value = 1;
+  48   2          if(K2==0)
+  49   2            key_value = 2;
+  50   2          if(K3==0)
+  51   2            key_value = 3;
+  52   2          if(K4==0)
+  53   2            key_value = 4;
+  54   2        }
+C51 COMPILER V9.00   KEY_SCAN                                                              07/02/2016 23:54:11 PAGE 2   
+
+  55   1        return key_value;
+  56   1      }  
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    132    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----       2
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

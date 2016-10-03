@@ -1,0 +1,283 @@
+C51 COMPILER V9.00   MPU6050                                                               07/02/2016 23:54:13 PAGE 1   
+
+
+C51 COMPILER V9.00, COMPILATION OF MODULE MPU6050
+OBJECT MODULE PLACED IN .\obj\mpu6050.obj
+COMPILER INVOKED BY: C:\Keil_v5\C51\BIN\C51.EXE src\mpu6050.c LARGE BROWSE ORDER INCDIR(.\inc) DEBUG OBJECTEXTEND PRINT(
+                    -.\list\mpu6050.lst) TABS(2) OBJECT(.\obj\mpu6050.obj)
+
+line level    source
+
+   1          #include <stc12c5a60s2.h> 
+   2          #include "delay.h"
+   3          #include "iic.h"
+   4          #include "mpu6050.h"
+   5          #include "math.h"
+   6          #include "uart.h"
+   7          
+   8          #ifdef kalman
+   9          xdata volatile float angle, angle_dot;    //kalmanºóµÄ½Ç¶ÈºÍ½ÇËÙ¶È¡£
+  10          #endif
+  11          
+  12          void Single_WriteI2C(u8 REG_Address,u8 REG_data)
+  13          {
+  14   1          IIC_start();                  //ÆðÊ¼ÐÅºÅ
+  15   1          IIC_SendByte(SlaveAddress);   //·¢ËÍÉè±¸µØÖ·+Ð´ÐÅºÅ
+  16   1          IIC_SendByte(REG_Address);    //ÄÚ²¿¼Ä´æÆ÷µØÖ·£¬
+  17   1          IIC_SendByte(REG_data);       //ÄÚ²¿¼Ä´æÆ÷Êý¾Ý£¬
+  18   1          IIC_stop();                   //·¢ËÍÍ£Ö¹ÐÅºÅ
+  19   1      }
+  20          u8 Single_ReadI2C(u8 REG_Address)
+  21          {
+  22   1        u8 xdata REG_data;
+  23   1        IIC_start();                   //ÆðÊ¼ÐÅºÅ
+  24   1        IIC_SendByte(SlaveAddress);    //·¢ËÍÉè±¸µØÖ·+Ð´ÐÅºÅ
+  25   1        IIC_SendByte(REG_Address);     //·¢ËÍ´æ´¢µ¥ÔªµØÖ·£¬´Ó0¿ªÊ¼  
+  26   1        IIC_start();                   //ÆðÊ¼ÐÅºÅ
+  27   1        IIC_SendByte(SlaveAddress+1);  //·¢ËÍÉè±¸µØÖ·+¶ÁÐÅºÅ
+  28   1        REG_data=IIC_readByte();       //¶Á³ö¼Ä´æÆ÷Êý¾Ý
+  29   1        IIC_Ack(1);                //½ÓÊÕÓ¦´ðÐÅºÅ
+  30   1        IIC_stop();                    //Í£Ö¹ÐÅºÅ
+  31   1        return REG_data;
+  32   1      }
+  33          //**************************************
+  34          //³õÊ¼»¯MPU6050
+  35          //**************************************
+  36          void mpu_init(void)
+  37          {
+  38   1        Single_WriteI2C(PWR_MGMT_1, 0x00);  //½â³ýÐÝÃß×´Ì¬
+  39   1        Single_WriteI2C(SMPLRT_DIV, 0x07);  //ÉèÖÃÍÓÂÝÒÇ²ÉÑùÆµÂÊ£ºf=(1or8)/1+Öµ£¨KHz£©£¬¿ªÆô´øÍ¨Ê±Îª1£¬¹Ø±Õ´øÍ¨Ê±Î
+             -ª8,µäÐÍÖµ£º0x07
+  40   1        Single_WriteI2C(CONFIG_M, 0x06);    //ÉèÖÃ´øÍ¨ÂË²¨Æ÷Í¨Æµ´ø
+  41   1        Single_WriteI2C(GYRO_CONFIG, 0x10); //ÍÓÂÝÒÇÁ¿³Ì0-1000¶ÈÃ¿Ãë£¬²»×Ô¼ì²â
+  42   1        Single_WriteI2C(ACCEL_CONFIG, 0x01);//¼ÓËÙ¶È¼ÆÂË²¨5Hz£¬Á¿³Ì2g£¬²»×Ô¼ì²â
+  43   1      }
+  44          //**************************************
+  45          //ºÏ³ÉÊý¾Ý
+  46          //**************************************
+  47          int GetData(u8 REG_Address)
+  48          {
+  49   1        u8 xdata H=0,L=0;
+  50   1        H=Single_ReadI2C(REG_Address);
+  51   1        L=Single_ReadI2C(REG_Address+1);
+  52   1        return (H<<8)+L;   //ºÏ³ÉÊý¾Ý
+  53   1      }
+C51 COMPILER V9.00   MPU6050                                                               07/02/2016 23:54:13 PAGE 2   
+
+  54          
+  55          float mpu_A(u8 chunnel)    //Ñö½ÇÏòÉÏÎªÕý
+  56          {
+  57   1        float xdata dat=0.0;
+  58   1      
+  59   1        switch(chunnel)
+  60   1        {
+  61   2          case 0:{
+  62   3                dat=GetData(ACCEL_XOUT_H);
+  63   3                if(dat>=35000){dat=0xffff-dat;dat-=Ax_zero;dat=-dat;}
+  64   3                else dat-=Ax_zero;
+  65   3                break;
+  66   3              }
+  67   2          case 2:{
+  68   3                dat=GetData(ACCEL_YOUT_H);
+  69   3                if(dat>=35000){dat=0xffff-dat;dat-=Ay_zero;dat=-dat;}
+  70   3                else dat-=Ay_zero;
+  71   3                break;
+  72   3              }
+  73   2          case 4:{
+  74   3                dat=GetData(ACCEL_ZOUT_H);
+  75   3                if(dat>=35000){dat=0xffff-dat;dat-=Az_zero;dat=-dat;}
+  76   3                else dat-=Az_zero;
+  77   3                break;
+  78   3              }
+  79   2        
+  80   2        }
+  81   1        
+  82   1      
+  83   1        //UART_Put_Inf("g:",(u16)dat);
+  84   1        dat=dat/16384.0;
+  85   1        dat=asin(dat)*57.29578;
+  86   1        if(dat>90)return 90;
+  87   1        else if(dat<-90)return -90;
+  88   1        else return dat;
+  89   1      }
+  90          
+  91          u8 mpu_T()//·µ»Øµ¥Î»Îª0.1 ÉãÊÏ¶È
+  92          {
+  93   1        return (u8)(350+(GetData(TEMP_OUT_H) + 13200) / 28); // ¼ÆËã³öÎÂ¶È
+  94   1      
+  95   1      }
+  96          float mpu_V(u8 chunnel)    //Ñö½ÇÏòÉÏÎªÕý
+  97          {
+  98   1        float xdata dat=0.0;
+  99   1      
+ 100   1        switch(chunnel)
+ 101   1        {
+ 102   2          case 0:{
+ 103   3                dat=GetData(GYRO_XOUT_H);
+ 104   3                if(dat>=35000){dat=0xffff-dat;dat-=Vx_zero;dat=-dat;}
+ 105   3                else dat-=Vx_zero;
+ 106   3                break;
+ 107   3              }
+ 108   2          case 2:{
+ 109   3                dat=GetData(GYRO_YOUT_H);
+ 110   3                if(dat>=35000){dat=0xffff-dat;dat-=Vy_zero;dat=-dat;}
+ 111   3                else dat-=Vy_zero;
+ 112   3                dat=-dat;//ÎªÁËÓë½Ç¶ÈÆ¥Åä£¬È¡·´
+ 113   3                break;
+ 114   3              }
+ 115   2          case 4:{
+C51 COMPILER V9.00   MPU6050                                                               07/02/2016 23:54:13 PAGE 3   
+
+ 116   3                dat=GetData(GYRO_ZOUT_H);
+ 117   3                if(dat>=35000){dat=0xffff-dat;dat-=Vz_zero;dat=-dat;}
+ 118   3                else dat-=Vz_zero;
+ 119   3                break;
+ 120   3              }
+ 121   2        
+ 122   2        }
+ 123   1        
+ 124   1      
+ 125   1      //  UART_Put_Inf("g:",(u16)dat);
+ 126   1        dat=dat/32.75;
+ 127   1        
+ 128   1        return dat;  //ÎªÁËÓë½Ç¶ÈÆ¥Åä£¬È¡·´
+ 129   1      }
+ 130          
+ 131          //¼à²âµ±Ç°ÊÇ·ñÓÐÍâ½ç¼ÓËÙ¶È¸ÉÈÅ
+ 132          bit mpu_Atest()
+ 133          {
+ 134   1        float xdata x=0.0,y=0.0,z=0.0;
+ 135   1        float xdata add=0;
+ 136   1        x=GetData(ACCEL_XOUT_H);
+ 137   1        if(x>=35000){x=0xffff-x;x-=Ax_zero;x=-x;}
+ 138   1        else x-=Ax_zero;
+ 139   1        x=x/16384.0;
+ 140   1        y=GetData(ACCEL_YOUT_H);
+ 141   1        if(y>=35000){y=0xffff-y;y-=Ay_zero;y=-y;}
+ 142   1        else y-=Ay_zero;
+ 143   1        y=y/16384.0;
+ 144   1        z=GetData(ACCEL_ZOUT_H);
+ 145   1        if(z>=35000){z=0xffff-z;z-=Az_zero;z=-z;}
+ 146   1        else z-=Az_zero;
+ 147   1        z=z/16384.0;
+ 148   1        add=x*x+y*y+z*z-1;
+ 149   1        if((add<mpu_test_num)&&(add>(-mpu_test_num)))return 0;
+ 150   1        else return 1;
+ 151   1      
+ 152   1      }
+ 153          #ifdef kalman
+ 154          
+ 155          void kalman_init()
+ 156          {
+ 157   1        TMOD|=0x10;        //¶¨Ê±Æ÷1¹¤×÷·½Ê½1
+ 158   1        TH0=(65536-36840)/256;   //22.1184M¾§Õñ20MS¼ÆÊ±³£Êý
+ 159   1        TL0=(65536-36840)%256;
+ 160   1        EA=1;          //¿ª×ÜÖÐ¶Ï
+ 161   1        ET1=1;           //¿ª¶¨Ê±Æ÷1ÖÐ¶Ï
+ 162   1        TR1=1;           //Æô¶¯¶¨Ê±Æ÷1
+ 163   1      
+ 164   1      }
+ 165          
+ 166          void T1_time(void) interrupt 3
+ 167          {
+ 168   1        TH0=(65536-36840)/256;   //22.1184M¾§Õñ1MS¼ÆÊ±³£Êý£¬×î´óÎó²î0.12us
+ 169   1        TL0=(65536-36840)%256;
+ 170   1        switch(kalman_chunnel)
+ 171   1        {
+ 172   2          case chunnel_X :  Kalman_Filter(mpu_A(chunnel_X),mpu_V(chunnel_Y));break;
+ 173   2          case chunnel_Y :  Kalman_Filter(mpu_A(chunnel_Y),mpu_V(chunnel_X));break;
+ 174   2          default : break;
+ 175   2        }
+ 176   1          
+ 177   1      }
+C51 COMPILER V9.00   MPU6050                                                               07/02/2016 23:54:13 PAGE 4   
+
+ 178          
+ 179          
+ 180          //-------------------------------------------------------
+ 181          //KalmanÂË²¨£¬8MHzµÄ´¦ÀíÊ±¼äÔ¼1.8ms£»
+ 182          //-------------------------------------------------------
+ 183          
+ 184          //-------------------------------------------------------
+ 185          //static xdata volatile float angle, angle_dot;     //Íâ²¿ÐèÒªÒýÓÃµÄ±äÁ¿
+ 186          
+ 187          //QÊÇÒ»¸ö2 x2¾ØÕó,´ú±íÁËÁ÷³ÌÐ­·½²îÔëÉù¡£ÔÚÕâÖÖÇé¿öÏÂ,Ëü±íÃ÷ÎÒÃÇ¶àÃ´ÏàÐÅ²âÐ±ÒÇÏà¶ÔÓÚÍÓÂÝÒÇ
+ 188          //R´ú±í²âÁ¿Ð­·½²îÔëÉùR = E(WT)¡£ÔÚ±¾ÀýÖÐ,ËüÊÇÒ»¸ö1 x1¾ØÕó,Ëµ,ÎÒÃÇÔ¤¼Æ10 ras¶¶¶¯´Ó²âÐ±ÒÇ¡£¶ÔÓÚÒ»¸ö1 x1¾ØÕóÔ
+             -ÚÕâÖÖÇé¿öÏÂV = 0.1
+ 189          //×¢Òâ£ºdtµÄÈ¡ÖµÎªkalmanÂË²¨Æ÷²ÉÑùÊ±¼ä;
+ 190          //const float Q_angle=0.001, Q_gyro=0.0015, R_angle=0.1, dt=0.02;
+ 191          //Q_angle:ÈýÖá¼ÓËÙ¶ÈµÄÔ¤²âÔëÉù£¬ÖµÔ½´ó¾Í±íÊ¾Ô½²»ÏàÐÅËü
+ 192          //Q_gyro£ºÍÓÂÝÒÇµÄÔ¤²âÔëÉù£¬ÖµÔ½´ó¾Í±íÊ¾Ô½²»ÏàÐÅËü
+ 193          //R_angle£º²âÁ¿ÔëÉù£¬ÖµÔ½´ó¾Í±íÊ¾ÄãÔ½²»ÏàÐÅÄã²âÁ¿µ½µÄÊý¾Ý£¬¶øÔ½ÏàÐÅÄãÔ¤²âµÄÖµ¡£
+ 194          //dt£º²ÉÑùÊ±¼ä
+ 195          #define Q_angle 0.003
+ 196          #define Q_gyro 0.0015
+ 197          #define R_angle 0.5 
+ 198          #define dt 0.02
+ 199          #define C_0 1
+ 200          static xdata volatile float kalman_P[2][2] = {{ 1, 0 },{ 0, 1 }};   
+ 201          static xdata volatile float Pdot[4] ={0,0,0,0}; 
+ 202          
+ 203          
+ 204          static xdata volatile float q_bias, angle_err, PCt_0, PCt_1, E, K_0, K_1, t_0, t_1;
+ 205          //-------------------------------------------------------
+ 206          void Kalman_Filter(float angle_m,float gyro_m)      //gyro_m:gyro_measure
+ 207          {
+ 208   1        
+ 209   1        angle+=(gyro_m-q_bias) * dt;
+ 210   1        
+ 211   1        Pdot[0]=Q_angle - kalman_P[0][1] - kalman_P[1][0];
+ 212   1        Pdot[1]=- kalman_P[1][1];
+ 213   1        Pdot[2]=- kalman_P[1][1];
+ 214   1        Pdot[3]=Q_gyro;
+ 215   1        
+ 216   1        kalman_P[0][0] += Pdot[0] * dt;
+ 217   1        kalman_P[0][1] += Pdot[1] * dt;
+ 218   1        kalman_P[1][0] += Pdot[2] * dt;
+ 219   1        kalman_P[1][1] += Pdot[3] * dt;
+ 220   1        
+ 221   1        
+ 222   1        angle_err = angle_m - angle;
+ 223   1        
+ 224   1        
+ 225   1        PCt_0 = C_0 * kalman_P[0][0];
+ 226   1        PCt_1 = C_0 * kalman_P[1][0];
+ 227   1        
+ 228   1        E = R_angle + C_0 * PCt_0;
+ 229   1        
+ 230   1        K_0 = PCt_0 / E;
+ 231   1        K_1 = PCt_1 / E;
+ 232   1        
+ 233   1        t_0 = PCt_0;
+ 234   1        t_1 = C_0 * kalman_P[0][1];
+ 235   1      
+ 236   1        kalman_P[0][0] -= K_0 * t_0;
+ 237   1        kalman_P[0][1] -= K_0 * t_1;
+ 238   1        kalman_P[1][0] -= K_1 * t_0;
+C51 COMPILER V9.00   MPU6050                                                               07/02/2016 23:54:13 PAGE 5   
+
+ 239   1        kalman_P[1][1] -= K_1 * t_1;
+ 240   1        
+ 241   1        
+ 242   1        angle += K_0 * angle_err;
+ 243   1        q_bias  += K_1 * angle_err;
+ 244   1        angle_dot = gyro_m-q_bias;    
+ 245   1      }
+ 246          
+ 247          
+ 248          #endif
+ 249          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =   3457    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =     76      38
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

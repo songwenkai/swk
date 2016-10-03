@@ -1,0 +1,1 @@
+"src\inv_mpu.c" LARGE BROWSE ORDER INCDIR(.\inc) DEBUG OBJECTEXTEND PRINT(.\list\inv_mpu.lst) TABS (2) OBJECT(.\obj\inv_mpu.obj)

@@ -1,0 +1,10 @@
+".\obj\main.obj",
+".\obj\nokia_5110.obj",
+".\obj\delay.obj",
+".\obj\led.obj",
+".\obj\interrupt.obj",
+".\obj\key_scan.obj",
+".\obj\nrf24L01.obj",
+".\obj\ad_get.obj" 
+TO ".\obj\car_YK" 
+PRINT(".\list\car_YK.m51") RAMSIZE(256) 

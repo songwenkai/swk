@@ -1,0 +1,1 @@
+"src\key_scan.c" LARGE BROWSE ORDER INCDIR(.\inc) DEBUG OBJECTEXTEND PRINT(.\list\key_scan.lst) TABS (2) OBJECT(.\obj\key_scan.obj)

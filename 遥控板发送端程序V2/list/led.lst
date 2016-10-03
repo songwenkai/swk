@@ -1,0 +1,72 @@
+C51 COMPILER V9.00   LED                                                                   07/02/2016 23:54:11 PAGE 1   
+
+
+C51 COMPILER V9.00, COMPILATION OF MODULE LED
+OBJECT MODULE PLACED IN .\obj\led.obj
+COMPILER INVOKED BY: C:\Keil_v5\C51\BIN\C51.EXE src\led.c LARGE BROWSE ORDER INCDIR(.\inc) DEBUG OBJECTEXTEND PRINT(.\li
+                    -st\led.lst) TABS(2) OBJECT(.\obj\led.obj)
+
+line level    source
+
+   1          #include "led.h"
+   2          #include "io_cfg.h"
+   3          #include "delay.h"
+   4                
+   5          void led_init(void){
+   6   1        led_off_all();
+   7   1      }
+   8           /******************************************************************
+   9           - 功能描述:关闭或点亮 指定LED亮灭
+  10           - 隶属模块：公开函数模块
+  11           - 函数属性：外部，用户可调用
+  12           - 参数说明：ledx  表示指定的LED  state 表示led状态值  0 或者 1         
+  13           - 返回说明：无
+  14           ******************************************************************/
+  15          void led_state(u8 ledx, u8 state) {
+  16   1        switch(ledx) {
+  17   2          case 0:led1 = state;break;
+  18   2          case 1:led2 = state;break;
+  19   2          case 2:led3 = state;break;
+  20   2          case 3:led4 = state;break;
+  21   2          default:break;
+  22   2        }
+  23   1      }
+  24           /******************************************************************
+  25           - 功能描述:轮流点亮4个led在轮流熄灭
+  26           - 隶属模块：公开函数模块
+  27           - 函数属性：外部，用户可调用
+  28           - 参数说明：无      
+  29           - 返回说明：无
+  30           ******************************************************************/
+  31          void led_test(void) {
+  32   1        char i = 0;
+  33   1        for(i = 0;i < 4; i++) {
+  34   2          led_state(i, LED_ON);
+  35   2          mdelay(1000);
+  36   2        }
+  37   1        
+  38   1        for(i = 3;i > -1; i--) {
+  39   2          led_state(i, LED_OFF);
+  40   2          mdelay(1000);
+  41   2        }
+  42   1        return;
+  43   1      }
+  44          
+  45          
+  46          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    124    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----       1
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+C51 COMPILER V9.00   LED                                                                   07/02/2016 23:54:11 PAGE 2   
+
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

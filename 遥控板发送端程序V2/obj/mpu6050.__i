@@ -1,0 +1,1 @@
+"src\mpu6050.c" LARGE BROWSE ORDER INCDIR(.\inc) DEBUG OBJECTEXTEND PRINT(.\list\mpu6050.lst) TABS (2) OBJECT(.\obj\mpu6050.obj)

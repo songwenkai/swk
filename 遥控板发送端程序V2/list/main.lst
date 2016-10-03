@@ -1,0 +1,301 @@
+C51 COMPILER V9.00   MAIN                                                                  07/03/2016 21:14:46 PAGE 1   
+
+
+C51 COMPILER V9.00, COMPILATION OF MODULE MAIN
+OBJECT MODULE PLACED IN .\obj\main.obj
+COMPILER INVOKED BY: C:\Keil_v5\C51\BIN\C51.EXE src\main.c LARGE BROWSE ORDER INCDIR(.\inc) DEBUG OBJECTEXTEND PRINT(.\l
+                    -ist\main.lst) TABS(2) OBJECT(.\obj\main.obj)
+
+line level    source
+
+   1          
+   2          /*******************************************************
+   3          
+   4                  +-----------------------------------------+
+   5                  |海灵智电    专注智能车机器人开发|
+   6                  +-----------------------------------------+
+   7          
+   8            此源码版权属 海灵智电 全权享有，如欲引用，敬请署名并告知
+   9                  严禁随意用于商业目的，违者必究，后果自负
+  10                       ->产品网店 http://hailzd.taobao.com/
+  11                       ->技术交流群 QQ群1:372079996  QQ群2:341730862        
+  12          ********************************************************/
+  13          #include "stc12c5a60s2.h"
+  14          #include <stdio.h>      /* 标准IO          */
+  15          #include <string.h>     /* 标准库        */
+  16          #include "sconfig.h"    /* 本地配置          */
+  17          #include "type.h"     /* 常用类型定义      */
+  18          #include "io_cfg.h"     /* 端口设置        */
+  19          #include "global_var.h"   /* 全局变量和类型定义    */
+  20          #include "led.h"
+  21          #include "delay.h"
+  22          #include "key_scan.h"
+  23          #include "nokia_5110.h"
+  24          #include "nrf24L01.h"
+  25          //#include "interrupt.h"
+  26          #include "ad_get.h"
+  27          #include "uart.h"
+  28          #include "iic.h"
+  29          #include "mpu6050.h"
+  30          #define CAR_SPEED_RIGHT_IO 0     //P10 - P17 八通道ADC
+  31          #define CAR_ANGLE_RIGHT_IO 1    //读取P15这个IO口adc值
+  32          #define CAR_SPEED_LEFT_IO  2
+  33          #define CAR_ANGLE_LEFT_IO  3
+  34          /**********************************************************/
+  35          /**********************************************************/
+  36          /**********************************************************/
+  37          void sys_init(void);
+  38          void io_init(void);
+  39          void global_var_init(void);
+  40          void dis_init(void);
+  41          void nrf_init(nrf_dir_t nrf_dir);
+  42          
+  43          void beep_test(void);
+  44          void nrf_ctl(void);
+  45          void fill_nrf_pkt(nrf_pkt_t *nrf_pkt);
+  46          
+  47          /**********************************************************/
+  48          /**********************************************************/
+  49          /**********************************************************/
+  50          unsigned char dis_buf[15] = "              ";
+  51          
+  52          nrf_pkt_t nrf_pkt;
+  53          unsigned char nrf_buf[sizeof(nrf_pkt_t)];
+  54          nrf_dir_t nrf_dir_flag;
+C51 COMPILER V9.00   MAIN                                                                  07/03/2016 21:14:46 PAGE 2   
+
+  55          unsigned char nrf_init_flag = 0;
+  56          unsigned char debug_5110;
+  57          unsigned int car_speed_left_ad_middle_value,car_speed_right_ad_middle_value;
+  58          unsigned int car_angle_left_ad_middle_value,car_angle_right_ad_middle_value;
+  59          int i=0;
+  60          
+  61          int main(void) 
+  62          {
+  63   1        sys_init();
+  64   1        while(1) 
+  65   1        {     
+  66   2          nrf_ctl();
+  67   2        }
+  68   1        return 0;
+  69   1      }
+  70          
+  71          void sys_init(void) 
+  72          {
+  73   1      
+  74   1        io_init();
+  75   1        global_var_init();
+  76   1      //  led_init();
+  77   1        nrf_tx_mode_init();
+  78   1        dis_init();
+  79   1        //led_test();
+  80   1        uart_init();
+  81   1        mpu_init();
+  82   1        delay_ms(150);  
+  83   1        beep_test();
+  84   1        //uart_init();
+  85   1         //mpu_init();
+  86   1        delay_ms(250);  
+  87   1        kalman_init();
+  88   1      }
+  89          
+  90          
+  91          void io_init(void) 
+  92          {
+  93   1        P4SW |= 0xFF; //开启P4口  
+  94   1      //  P1M0 &= 0Xf0;   //P14 P15 P16 P17设置为AD采集模式
+  95   1      //  P1M1 |= ~0Xf0;
+  96   1        
+  97   1        return;
+  98   1      }
+  99          
+ 100          void global_var_init(void) 
+ 101          {
+ 102   1          
+ 103   1        car_speed_left_ad_middle_value = read_adc(CAR_SPEED_LEFT_IO);
+ 104   1        car_speed_right_ad_middle_value = read_adc(CAR_SPEED_RIGHT_IO);
+ 105   1        car_angle_left_ad_middle_value = read_adc(CAR_ANGLE_LEFT_IO);
+ 106   1        car_angle_right_ad_middle_value = read_adc(CAR_ANGLE_RIGHT_IO);
+ 107   1      
+ 108   1        debug_5110 = 0;
+ 109   1        return;
+ 110   1      }
+ 111          
+ 112          
+ 113          void dis_init(void) 
+ 114          {
+ 115   1        LCD_init(); //初始化液晶    
+ 116   1        LCD_clear();
+C51 COMPILER V9.00   MAIN                                                                  07/03/2016 21:14:46 PAGE 3   
+
+ 117   1        LCD_write_english_string(0,0,"+_+HLKJ CAR+_+");
+ 118   1        LCD_write_english_string(0,1,"Type: RS_ONE  ");
+ 119   1        LCD_write_english_string(0,2,"Sspd: xxx cm/s");
+ 120   1        LCD_write_english_string(0,3,"Angl: xxx     ");
+ 121   1        LCD_write_english_string(0,4,"Gspd: xxx cm/s");
+ 122   1        return;
+ 123   1      }
+ 124          
+ 125          
+ 126          void beep_test(void) 
+ 127          {
+ 128   1        beep = 0;
+ 129   1        delay_ms(500);
+ 130   1        beep = 1; 
+ 131   1      }
+ 132          
+ 133          
+ 134          void nrf_ctl(void) 
+ 135          {
+ 136   1        unsigned char ret;
+ 137   1        fill_nrf_pkt(&nrf_pkt);//填充数据包
+ 138   1        memcpy(nrf_buf, &nrf_pkt, sizeof(nrf_pkt_t));
+ 139   1      
+ 140   1        ret = nRF24L01_TxPacket(nrf_buf);
+ 141   1        if(ret) 
+ 142   1        {
+ 143   2          if(debug_5110) 
+ 144   2          {
+ 145   3            //类型显示
+ 146   3            sprintf(dis_buf, "Type: %s", 
+ 147   3            nrf_pkt.car_type==CAR_TYPE_RS_ONE_MOTOR?"RS_ONE  ":
+ 148   3            nrf_pkt.car_type==CAR_TYPE_RS_TWO_MOTOR?"RS_TWO  ":
+ 149   3            nrf_pkt.car_type==CAR_TYPE_RS_TWO_MOTOR?"TT_TWO  ":
+ 150   3            nrf_pkt.car_type==CAR_TYPE_RS_TWO_MOTOR?"TT_FOUR ":
+ 151   3                                "TYPE ERR");
+ 152   3            LCD_write_english_string(0, 1, dis_buf);
+ 153   3            
+ 154   3            //速度显示
+ 155   3            sprintf(dis_buf,"Sspd: xxxxcm/s");
+ 156   3            if(nrf_pkt.car_speed & 0x8000) 
+ 157   3            {
+ 158   4              dis_buf[5] = '+';
+ 159   4              nrf_pkt.car_speed = 1024 - nrf_pkt.car_speed;
+ 160   4            } 
+ 161   3            else 
+ 162   3            {
+ 163   4              dis_buf[5] = '-';
+ 164   4            }   
+ 165   3            dis_buf[6] = (nrf_pkt.car_speed&0x3ff)/1000 + '0';
+ 166   3            dis_buf[7] = (nrf_pkt.car_speed&0x3ff)%1000/100 + '0';
+ 167   3            dis_buf[8] = (nrf_pkt.car_speed&0x3ff)%100/10 + '0';
+ 168   3            dis_buf[9] = (nrf_pkt.car_speed&0x3ff)%10 + '0';
+ 169   3            LCD_write_english_string(0, 2, dis_buf);
+ 170   3            
+ 171   3            //角度显示
+ 172   3            sprintf(dis_buf, "Angl: xxxx   ");
+ 173   3            if(nrf_pkt.car_angle & 0x8000) 
+ 174   3            {
+ 175   4              dis_buf[5] = '+';
+ 176   4              nrf_pkt.car_angle = 1024 - nrf_pkt.car_angle&0x3ff;
+ 177   4            } 
+ 178   3            else 
+C51 COMPILER V9.00   MAIN                                                                  07/03/2016 21:14:46 PAGE 4   
+
+ 179   3            {
+ 180   4              dis_buf[5] = '-';
+ 181   4            }
+ 182   3            dis_buf[6] = (nrf_pkt.car_angle&0x3ff)/1000 + '0';
+ 183   3            dis_buf[7] = (nrf_pkt.car_angle&0x3ff)%1000/100 + '0';
+ 184   3            dis_buf[8] = (nrf_pkt.car_angle&0x3ff)%100/10 + '0';
+ 185   3            dis_buf[9] = (nrf_pkt.car_angle&0x3ff)%10 + '0';
+ 186   3            LCD_write_english_string(0, 3, dis_buf);
+ 187   3            
+ 188   3            LCD_write_english_string(0, 5, "send  success! ");
+ 189   3          }
+ 190   2          led_nrf = ~led_nrf;
+ 191   2        } 
+ 192   1        else 
+ 193   1        {
+ 194   2          if(debug_5110)
+ 195   2          {
+ 196   3            LCD_write_english_string(0, 5, "send  error!   ");
+ 197   3          }
+ 198   2          led_nrf = 1;
+ 199   2        }
+ 200   1        return;
+ 201   1      }
+ 202          
+ 203          void fill_nrf_pkt(nrf_pkt_t *nrf_pkt) 
+ 204          {
+ 205   1        unsigned int temp;
+ 206   1        memset(nrf_pkt, 0, sizeof(nrf_pkt_t));
+ 207   1        
+ 208   1        //车类型
+ 209   1        nrf_pkt->car_type = CAR_TYPE_RS_ONE_MOTOR;
+ 210   1        
+ 211   1        //速度  
+ 212   1        //temp = read_adc(CAR_SPEED_LEFT_IO); 
+ 213   1        //nrf_pkt->car_speed = temp - car_speed_left_ad_middle_value;
+ 214   1        temp = read_adc(CAR_SPEED_RIGHT_IO); 
+ 215   1        nrf_pkt->car_speed = temp - car_speed_right_ad_middle_value;   //读取右摇杆ADC值，赋值给nrf_pkt->car_spee
+             -d成员
+ 216   1        
+ 217   1          //UART_Put_Inf("speed1:",temp); 
+ 218   1          //  UART_Put_Inf("speed2:",nrf_pkt->car_speed); 
+ 219   1       
+ 220   1        //角度
+ 221   1        //temp = read_adc(CAR_SPEED_RIGHT_IO);
+ 222   1        //nrf_pkt->car_angle = temp - car_angle_right_ad_middle_value;
+ 223   1          temp = read_adc(CAR_ANGLE_LEFT_IO); 
+ 224   1          nrf_pkt->car_angle = temp - car_angle_left_ad_middle_value;
+ 225   1        /*
+ 226   1        UART_Put_Inf("angle1:",temp); 
+ 227   1        UART_Put_Inf("angle2:",nrf_pkt->car_speed); 
+ 228   1        */
+ 229   1        //temp = read_adc(CAR_ANGLE_LEFT_IO);
+ 230   1        //nrf_pkt->car_angle = temp - car_angle_left_ad_middle_value;
+ 231   1        nrf_pkt->Angle_left = key_scan_left();
+ 232   1        nrf_pkt->Speed_right = key_scan_right();
+ 233   1        nrf_pkt->key_left_value = key_scan_left();
+ 234   1        nrf_pkt->key_right_value = key_scan_right();
+ 235   1        /******************************/
+ 236   1        // UART1_SendOneChar(nrf_pkt->key_left_value+0x30);
+ 237   1        // UART1_SendOneChar(nrf_pkt->Speed_right+'0');
+ 238   1        /******************************/
+ 239   1        nrf_pkt->X_angle = mpu_A(chunnel_X);
+C51 COMPILER V9.00   MAIN                                                                  07/03/2016 21:14:46 PAGE 5   
+
+ 240   1        nrf_pkt->Y_angle = mpu_A(chunnel_Y);
+ 241   1        #if  0
+                if((nrf_pkt->X_angle)>0)
+                UART_Put_Inf("Ax:",nrf_pkt->X_angle); //显示X轴角度
+                else
+                {
+                  nrf_pkt->X_angle=-nrf_pkt->X_angle;
+                  UART_Put_Inf("Ax:-",nrf_pkt->X_angle);
+                }
+                  
+                 // UART_Put_Inf("speed:",temp);  //显示X轴角度
+              
+                
+                 
+                if((nrf_pkt->Y_angle)>0)
+                UART_Put_Inf("Ay:",nrf_pkt->Y_angle); //显示X轴角度
+                else
+                {
+                  nrf_pkt->Y_angle=-nrf_pkt->Y_angle;
+                  UART_Put_Inf("Ay:-",nrf_pkt->Y_angle);
+                } 
+                  
+                //UART_Put_Inf("speed:",temp);  //显示X轴角度
+                #endif
+ 264   1        //校验
+ 265   1        nrf_pkt->car_verify = nrf_pkt->car_type + nrf_pkt->car_speed + nrf_pkt->car_angle;
+ 266   1        
+ 267   1        return;
+ 268   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =   1065    ----
+   CONSTANT SIZE    =    190    ----
+   XDATA SIZE       =     66       3
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)
