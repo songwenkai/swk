@@ -1,4 +1,4 @@
-C51 COMPILER V9.00   NRF24L01                                                              10/03/2016 14:28:43 PAGE 1   
+C51 COMPILER V9.00   NRF24L01                                                              10/03/2016 14:38:39 PAGE 1   
 
 
 C51 COMPILER V9.00, COMPILATION OF MODULE NRF24L01
@@ -62,7 +62,7 @@ line level    source
   51   1      }
   52          uchar SPI_Read (uchar  reg )
   53          {
-C51 COMPILER V9.00   NRF24L01                                                              10/03/2016 14:28:43 PAGE 2   
+C51 COMPILER V9.00   NRF24L01                                                              10/03/2016 14:38:39 PAGE 2   
 
   54   1        uchar reg_val;
   55   1        CSN=0;
@@ -126,7 +126,7 @@ line level    source
  112   1      }
  113          /****************************************************************************************************/
  114          /*******************************接*****收*****模*****式*****代*****码********************************/
-C51 COMPILER V9.00   NRF24L01                                                              10/03/2016 14:28:43 PAGE 3   
+C51 COMPILER V9.00   NRF24L01                                                              10/03/2016 14:38:39 PAGE 3   
 
  115          /****************************************************************************************************/
  116          uchar SPI_Read_Buf(uchar reg, uchar *pBuf, uchar uchars)
@@ -178,39 +178,40 @@ line level    source
  162   1        delay_ms(10);
  163   1        return revale;
  164   1      }
- 165          /****************************************************************************************************/
- 166          /*函数：void RX_Mode(void)
- 167          /*功能：数据接收配置 11
- 168          /****************************************************************************************************/
- 169          void RX_Mode(void)
- 170          {
- 171   1        CE=0;
- 172   1        SPI_RW_Reg(FLUSH_RX,0x00);
- 173   1        //SPI_Write_Buf(WRITE_REG + TX_ADDR, TX_ADDRESS, TX_ADR_WIDTH);    // Writes TX_Address to nRF24L01
- 174   1        SPI_Write_Buf(WRITE_REG + RX_ADDR_P0, TX_ADDRESS, TX_ADR_WIDTH); // RX_Addr0 same as TX_Adr for Auto.Ack
- 175   1         
- 176   1        SPI_RW_Reg(WRITE_REG + EN_AA, 0x01);      // Enable Auto.Ack:Pipe0
-C51 COMPILER V9.00   NRF24L01                                                              10/03/2016 14:28:43 PAGE 4   
+ 165          
+ 166          /****************************************************************************************************/
+ 167          /*函数：void RX_Mode(void)
+ 168          /*功能：数据接收配置
+ 169          /****************************************************************************************************/
+ 170          void RX_Mode(void)
+ 171          {
+ 172   1        CE=0;
+ 173   1        SPI_RW_Reg(FLUSH_RX,0x00);
+ 174   1        //SPI_Write_Buf(WRITE_REG + TX_ADDR, TX_ADDRESS, TX_ADR_WIDTH);    // Writes TX_Address to nRF24L01
+ 175   1        SPI_Write_Buf(WRITE_REG + RX_ADDR_P0, TX_ADDRESS, TX_ADR_WIDTH); // RX_Addr0 same as TX_Adr for Auto.Ack
+ 176   1         
+C51 COMPILER V9.00   NRF24L01                                                              10/03/2016 14:38:39 PAGE 4   
 
- 177   1        SPI_RW_Reg(WRITE_REG + EN_RXADDR, 0x01);  // Enable Pipe0
- 178   1         //SPI_RW_Reg(WRITE_REG + SETUP_RETR, 0x1a); // 500us + 86us, 10 retrans...1a
- 179   1        SPI_RW_Reg(WRITE_REG + RF_CH, 40);        // Select RF channel 40
- 180   1        SPI_RW_Reg(WRITE_REG + RX_PW_P0, RX_PLOAD_WIDTH); //设置接收数据长度，本次设置为2字节
- 181   1        SPI_RW_Reg(WRITE_REG + RF_SETUP, 0x07);   // TX_PWR:0dBm, Datarate:1Mbps, LNA:HCURR
- 182   1        SPI_RW_Reg(WRITE_REG + CONFIG, 0x0F);
- 183   1        CE=1;
- 184   1        delay_ms(130);
- 185   1      }
- 186          
- 187          void nrf_tx_mode_init(void) {
- 188   1        nRF24L01_init();
- 189   1        TX_Mode();
- 190   1      }
- 191          
- 192          void nrf_rx_mode_init(void) {
- 193   1        nRF24L01_init();
- 194   1        RX_Mode();
- 195   1      }
+ 177   1        SPI_RW_Reg(WRITE_REG + EN_AA, 0x01);      // Enable Auto.Ack:Pipe0
+ 178   1        SPI_RW_Reg(WRITE_REG + EN_RXADDR, 0x01);  // Enable Pipe0
+ 179   1         //SPI_RW_Reg(WRITE_REG + SETUP_RETR, 0x1a); // 500us + 86us, 10 retrans...1a
+ 180   1        SPI_RW_Reg(WRITE_REG + RF_CH, 40);        // Select RF channel 40
+ 181   1        SPI_RW_Reg(WRITE_REG + RX_PW_P0, RX_PLOAD_WIDTH); //设置接收数据长度，本次设置为2字节
+ 182   1        SPI_RW_Reg(WRITE_REG + RF_SETUP, 0x07);   // TX_PWR:0dBm, Datarate:1Mbps, LNA:HCURR
+ 183   1        SPI_RW_Reg(WRITE_REG + CONFIG, 0x0F);
+ 184   1        CE=1;
+ 185   1        delay_ms(130);
+ 186   1      }
+ 187          
+ 188          void nrf_tx_mode_init(void) {
+ 189   1        nRF24L01_init();
+ 190   1        TX_Mode();
+ 191   1      }
+ 192          
+ 193          void nrf_rx_mode_init(void) {
+ 194   1        nRF24L01_init();
+ 195   1        RX_Mode();
+ 196   1      }
 
 
 MODULE INFORMATION:   STATIC OVERLAYABLE
