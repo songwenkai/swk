@@ -1,4 +1,4 @@
-BL51 BANKED LINKER/LOCATER V6.22                                                        10/03/2016  13:42:49  PAGE 1
+BL51 BANKED LINKER/LOCATER V6.22                                                        10/03/2016  13:56:11  PAGE 1
 
 
 BL51 BANKED LINKER/LOCATER V6.22, INVOKED BY:
@@ -25,8 +25,9 @@ LINK MAP OF MODULE:  led (LED)
 
             * * * * * * *   C O D E   M E M O R Y   * * * * * * *
             CODE    0000H     0003H     ABSOLUTE     
-            CODE    0003H     000CH     UNIT         ?C_C51STARTUP
-            CODE    000FH     0002H     UNIT         ?PR?MAIN?LED
+            CODE    0003H     000DH     UNIT         ?PR?DELAY?LED
+            CODE    0010H     000CH     UNIT         ?PR?MAIN?LED
+            CODE    001CH     000CH     UNIT         ?C_C51STARTUP
 
 
 
@@ -39,6 +40,9 @@ SEGMENT
 ?C_C51STARTUP
   +--> ?PR?MAIN?LED
 
+?PR?MAIN?LED
+  +--> ?PR?DELAY?LED
+
 
 
 SYMBOL TABLE OF MODULE:  led (LED)
@@ -48,18 +52,36 @@ SYMBOL TABLE OF MODULE:  led (LED)
 
   -------         MODULE        LED
   C:0000H         SYMBOL        _ICE_DUMMY_
-  C:000FH         PUBLIC        main
+  D:00A0H         PUBLIC        P2
+  C:0003H         PUBLIC        delay
+  C:0010H         PUBLIC        main
+  B:00A0H.0       PUBLIC        led
+  -------         PROC          DELAY
+  -------         DO            
+  D:0007H         SYMBOL        i
+BL51 BANKED LINKER/LOCATER V6.22                                                      10/03/2016  13:56:11  PAGE 2
+
+
+  D:0006H         SYMBOL        j
+  -------         ENDDO         
+  C:0003H         LINE#         3
+  C:0003H         LINE#         4
+  C:0003H         LINE#         6
+  C:0005H         LINE#         7
+  C:000FH         LINE#         8
+  -------         ENDPROC       DELAY
   -------         PROC          MAIN
-  C:000FH         LINE#         2
-  C:000FH         LINE#         3
-  C:000FH         LINE#         4
-  C:000FH         LINE#         5
-  C:000FH         LINE#         6
+  C:0010H         LINE#         9
+  C:0010H         LINE#         10
+  C:0010H         LINE#         11
+  C:0010H         LINE#         12
+  C:0010H         LINE#         13
+  C:0012H         LINE#         14
+  C:0015H         LINE#         15
+  C:0017H         LINE#         16
+  C:001AH         LINE#         17
   -------         ENDPROC       MAIN
   -------         ENDMOD        LED
 
-Program Size: data=9.0 xdata=0 code=17
-BL51 BANKED LINKER/LOCATER V6.22                                                      10/03/2016  13:42:49  PAGE 2
-
-
+Program Size: data=9.0 xdata=0 code=40
 LINK/LOCATE RUN COMPLETE.  0 WARNING(S),  0 ERROR(S)
